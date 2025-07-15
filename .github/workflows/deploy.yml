@@ -65,11 +65,11 @@ jobs:
             
             echo "📄 Creating .env file..."
             sudo tee /var/www/html/.env > /dev/null << 'EOT'
-DB_NAME=${{ secrets.DB_NAME }}
-DB_USER=${{ secrets.DB_USER }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-DB_ADDRESS=${{ secrets.DB_ADDRESS }}
-EOT
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_ADDRESS=${{ secrets.DB_ADDRESS }}
+            EOT
             
             sudo chown apache:apache /var/www/html/.env
             sudo chmod 640 /var/www/html/.env
@@ -82,5 +82,5 @@ EOT
             
             echo "🧹 Cleaning up temp files..."
             rm -f /tmp/wordpress-files.tar.gz /tmp/wordpress.sql
-      EOF
+          EOF
         done
