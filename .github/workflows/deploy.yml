@@ -83,5 +83,5 @@ jobs:
             
             echo "🧹 Cleaning up temp files..."
             rm -f /tmp/wordpress-files.tar.gz /tmp/wordpress.sql
-EOF
+            EOF
         done
