@@ -28,12 +28,32 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       run: |
+        set -e  # Exit on any error
+        echo "🔍 Checking required files..."
+        ls -la wordpress/ || echo "⚠️ WordPress directory not found"
+        ls -la wordpress.sql || echo "⚠️ wordpress.sql not found"
+        echo "📋 App Server IPs: ${{ secrets.APP_SERVER_IPS }}"
         IFS=',' read -ra HOSTS <<< "${{ secrets.APP_SERVER_IPS }}"
         for host in "${HOSTS[@]}"; do
           echo "🚀 Deploying to $host via bastion ${{ secrets.BASTION_IP }}..."
+          
+          # Test connectivity first
+          echo "🔗 Testing connection to $host..."
+          ssh -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.DEPLOY_USER }}@$host "echo 'Connection successful'" || {
+            echo "❌ Failed to connect to $host"
+            continue
+          }
+          
           # Copy files via bastion (ProxyJump)
-          scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no wordpress/wordpress-files.tar.gz ${{ secrets.DEPLOY_USER }}@$host:/tmp/
-          scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no wordpress.sql ${{ secrets.DEPLOY_USER }}@$host:/tmp/
+          echo "📤 Copying files to $host..."
+          scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no wordpress/wordpress-files.tar.gz ${{ secrets.DEPLOY_USER }}@$host:/tmp/ || {
+            echo "❌ Failed to copy wordpress-files.tar.gz to $host"
+            continue
+          }
+          scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no wordpress.sql ${{ secrets.DEPLOY_USER }}@$host:/tmp/ || {
+            echo "❌ Failed to copy wordpress.sql to $host"
+            continue
+          }
           # SSH to app server via bastion and deploy
           ssh -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} -i key.pem -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@$host <<EOF
             echo "📦 Unpacking WordPress..."
@@ -56,10 +76,12 @@ jobs:
             sudo chmod 640 /var/www/html/.env
 
             echo "🛢️ Importing database..."
-            mysql -h ${{ secrets.DB_ADDRESS }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME}} < /tmp/wordpress.sql
+            mysql -h ${{ secrets.DB_ADDRESS }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} < /tmp/wordpress.sql
 
             echo "✅ Restarting HTTPD"
             sudo systemctl start httpd
-          EOF
-
+            
+            echo "🧹 Cleaning up temp files..."
+            rm -f /tmp/wordpress-files.tar.gz /tmp/wordpress.sql
+EOF
         done
