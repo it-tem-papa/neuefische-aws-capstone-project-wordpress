@@ -23,7 +23,7 @@ mysql -h "${DB_ADDRESS}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < /tmp/
 
 echo "🔁 Updating WordPress site URL..."
 
-NEW_URL="http://app-lb-1675760076.us-west-2.elb.amazonaws.com"  # Change this to your current domain
+NEW_URL="http://app-lb-77588361.us-west-2.elb.amazonaws.com"  # Change this to your current domain
 OLD_ULR="http://localhost:8080"
 
 # Update wp_options table
