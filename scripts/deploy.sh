@@ -23,7 +23,8 @@ mysql -h "${DB_ADDRESS}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" < /tmp/
 
 echo "🔁 Updating WordPress site URL..."
 
-NEW_URL="app-lb-457439893.us-west-2.elb.amazonaws.com"  # Change this to your current domain
+NEW_URL="http://app-lb-1675760076.us-west-2.elb.amazonaws.com/"  # Change this to your current domain
+OLD_ULR="http://localhost:8080"
 
 # Update wp_options table
 mysql -h "${DB_ADDRESS}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" <<SQL
@@ -32,8 +33,8 @@ SQL
 
 # This does a search and replace in post/page content and GUIDs
 mysql -h "${DB_ADDRESS}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" <<SQL
-UPDATE wp_posts SET guid = REPLACE(guid, 'http://oldurl.local', '$NEW_URL');
-UPDATE wp_posts SET post_content = REPLACE(post_content, 'http://oldurl.local', '$NEW_URL');
+UPDATE wp_posts SET guid = REPLACE(guid, '$OLD_ULR', '$NEW_URL');
+UPDATE wp_posts SET post_content = REPLACE(post_content, '$OLD_ULR', '$NEW_URL');
 SQL
 
 echo "✅ Restarting HTTPD"
