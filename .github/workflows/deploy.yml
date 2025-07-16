@@ -24,6 +24,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_ADDRESS: ${{ secrets.DB_ADDRESS }}
+          LIVE_URL: ${{ secrets.LIVE_URL }}
         run: |
           IFS=',' read -ra HOSTS <<< "${{ secrets.APP_SERVER_IPS }}"
 
@@ -53,6 +54,6 @@ jobs:
             echo "🚀 Running deploy.sh on $host..."
             ssh -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
                 -i key.pem -o StrictHostKeyChecking=no \
-                ${{ secrets.DEPLOY_USER }}@$host "DB_NAME='${DB_NAME}' DB_USER='${DB_USER}' DB_PASSWORD='${DB_PASSWORD}' DB_ADDRESS='${DB_ADDRESS}' bash /tmp/deploy.sh"
+                ${{ secrets.DEPLOY_USER }}@$host "DB_NAME='${DB_NAME}' DB_USER='${DB_USER}' DB_PASSWORD='${DB_PASSWORD}' DB_ADDRESS='${DB_ADDRESS}' LIVE_URL='${LIVE_URL}' bash /tmp/deploy.sh"
           done
 
