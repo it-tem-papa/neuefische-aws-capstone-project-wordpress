@@ -32,7 +32,7 @@ jobs:
             echo "🚀 Deploying to $host via bastion ${{ secrets.BASTION_IP }}..."
 
             ssh -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
-                -i key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+                -i key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 \
                 ${{ secrets.DEPLOY_USER }}@$host "echo 'Connection OK'" || {
               echo "❌ Connection to $host failed"
               continue
