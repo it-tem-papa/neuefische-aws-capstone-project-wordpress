@@ -40,20 +40,20 @@ jobs:
 
             echo "📤 Copying files to $host..."
             scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
-                -i key.pem -o StrictHostKeyChecking=no wordpress/wordpress-files.tar.gz \
+                -i key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null wordpress/wordpress-files.tar.gz \
                 ${{ secrets.DEPLOY_USER }}@$host:/tmp/
 
             scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
-                -i key.pem -o StrictHostKeyChecking=no wordpress.sql \
+                -i key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null wordpress.sql \
                 ${{ secrets.DEPLOY_USER }}@$host:/tmp/
 
             scp -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
-                -i key.pem -o StrictHostKeyChecking=no scripts/deploy.sh \
+                -i key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null scripts/deploy.sh \
                 ${{ secrets.DEPLOY_USER }}@$host:/tmp/
 
             echo "🚀 Running deploy.sh on $host..."
             ssh -o ProxyJump=${{ secrets.BASTION_USER }}@${{ secrets.BASTION_IP }} \
-                -i key.pem -o StrictHostKeyChecking=no \
+                -i key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                 ${{ secrets.DEPLOY_USER }}@$host "DB_NAME='${DB_NAME}' DB_USER='${DB_USER}' DB_PASSWORD='${DB_PASSWORD}' DB_ADDRESS='${DB_ADDRESS}' LIVE_URL='${LIVE_URL}' bash /tmp/deploy.sh"
           done
 
