@@ -12,13 +12,8 @@ This repository contains WordPress files and automated deployment scripts for th
 ├── scripts/
 │   └── deploy.sh              # Server-side deployment script
 ├── wordpress/
-│   ├── wordpress-files.tar.gz # WordPress application files
-│   └── wordpress-files01.tar.gz # Backup WordPress files
-├── .env                       # Environment variables template
-├── .gitignore                # Git ignore rules
-├── deploy_template.py        # Python script to generate deployment template
+│   └── wordpress-files.tar.gz # WordPress application files
 ├── wordpress.sql             # WordPress database dump
-├── wordpress_01.sql          # Backup database dump
 └── README.md                 # This file
 ```
 
@@ -50,11 +45,11 @@ Set these secrets in your GitHub repository settings:
 |--------|-------------|---------|
 | `DEPLOY_KEY` | SSH private key for server access | `-----BEGIN RSA PRIVATE KEY-----...` |
 | `BASTION_IP` | Public IP of bastion/web server | `54.123.45.67` |
-| `BASTION_USER` | SSH user for bastion host | `ec2-user` |
+| `BASTION_USER` | SSH user for bastion host | `test-user` |
 | `APP_SERVER_IPS` | Comma-separated private IPs of app servers | `10.0.0.32,10.0.0.48` |
-| `DEPLOY_USER` | SSH user for app servers | `ec2-user` |
-| `DB_NAME` | RDS database name | `wordpress` |
-| `DB_USER` | RDS database username | `root` |
+| `DEPLOY_USER` | SSH user for app servers | `test-user` |
+| `DB_NAME` | RDS database name | `wordpress_database` |
+| `DB_USER` | RDS database username | `admin` |
 | `DB_PASSWORD` | RDS database password | `your-secure-password` |
 | `DB_ADDRESS` | RDS endpoint | `wordpress-db.xyz.rds.amazonaws.com` |
 
@@ -88,16 +83,16 @@ If you need to deploy manually:
 
 ```bash
 # 1. SSH to bastion host
-ssh -i your-key.pem ec2-user@BASTION-IP
+ssh -i your-key.pem test-user@BASTION-IP
 
 # 2. Copy files to app server
-scp wordpress-files.tar.gz ec2-user@APP-SERVER-IP:/tmp/
-scp wordpress.sql ec2-user@APP-SERVER-IP:/tmp/
-scp deploy.sh ec2-user@APP-SERVER-IP:/tmp/
+scp wordpress-files.tar.gz test-user@APP-SERVER-IP:/tmp/
+scp wordpress.sql test-user@APP-SERVER-IP:/tmp/
+scp deploy.sh test-user@APP-SERVER-IP:/tmp/
 
 # 3. SSH to app server and deploy
-ssh ec2-user@APP-SERVER-IP
-DB_NAME='wordpress' DB_USER='root' DB_PASSWORD='password' DB_ADDRESS='rds-endpoint' bash /tmp/deploy.sh
+ssh test-user@APP-SERVER-IP
+DB_NAME='wordpress_database' DB_USER='admin' DB_PASSWORD='password' DB_ADDRESS='rds-endpoint' bash /tmp/deploy.sh
 ```
 
 ## 📋 Deployment Script Features
@@ -196,6 +191,26 @@ This deployment repository works with:
 - Configure WordPress caching and optimization
 - Set up monitoring and alerting
 
+## 🚧 Deployment Challenges
+
+While the automated deployment system works, the following areas were especially challenging:
+
+- **WordPress Database Import**: Ensuring SQL imports run successfully in remote EC2 targets via SSH was difficult to debug.
+- **Dynamic URL Replacement**: WordPress stores the site URL in multiple tables; updating all instances cleanly was critical to avoid broken links.
+- **SSH Connectivity via Bastion Host**: Securely copying files and executing scripts required careful coordination of environment variables and network settings.
+- **State Management**: There is currently no retry or rollback if the deployment fails midway.
+
+
+## 💡 Future Improvements
+
+- Switch from EC2-based file deployment to Amazon S3 for static WordPress content
+- Use Amazon CloudFront as a CDN for performance and caching
+- Add SQL schema validation before import to prevent data corruption
+- Support rollback strategy if WordPress import fails
+- Move sensitive configs (e.g., .env) to AWS SSM or Secrets Manager
+- Improve GitHub Actions logging and error feedback
+- Add post-deployment health checks for WordPress
+- Consider decoupling WordPress backend from frontend (headless WordPress)
 ---
 
 **Note**: This is part of the Neuefische AWS Capstone Project demonstrating Infrastructure as Code, CI/CD, and cloud-native WordPress deployment.
